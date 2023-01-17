@@ -16,6 +16,7 @@ class Node{
  };
 
 class Tree{
+    public:
     Node * root;
     int size;
     Tree(Node * my_root, int num){
@@ -45,11 +46,17 @@ void printTree(Node* root){
     }
 
 int main(){
- 
+    
+
     Node* root = new Node(1);
     Node* a = new Node(2);
     Node* b = new Node(3);
     root->left = a;
     root->right = b;
+    // printTree(root);
+
+    Tree* my_tree = new Tree(root, 100);
     printTree(root);
+    cout << "\n";
+    cout << my_tree->getHeight(root);
 }
