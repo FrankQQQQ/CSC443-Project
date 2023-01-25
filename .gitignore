@@ -1,0 +1,7 @@
+/cmake-build-build/
+
+/.idea
+
+CMakeFiles
+/CMakeCache.txt
+/cmake_install.cmake
