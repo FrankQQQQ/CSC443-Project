@@ -5,13 +5,17 @@ using namespace std;
 class Node{
     // Node Class
     public:
+    int key;
     int val;
+    int factor;
     Node * left;
     Node * right;
-    Node(int value){
+    Node(int key, int value){
+        this->key = key;
         this->val = value;
         this->left = nullptr;
         this->right = nullptr;
+        this->factor = -1;
     }
  };
 
@@ -32,17 +36,44 @@ class Tree{
             return 1 + max(getHeight(root->left), getHeight(root->right));
         }
     }
-    Node * insert(Node* newNode){
-        if(this->root == NULL){
-            this->root = newNode;
-            return newNode;
+    int getNodeNum(Node *root){
+        if (root == NULL){
+            return 0;
         }
-        else{
-            if (newNode->val < this->root->val){
-                return this->root->left.insert(newNode);
-            }
+        return (1 + getNodeNum(root->left) + getNodeNum(root->right));
+    }
+
+    Node* insert(Node *root, int key, int value){
+        Node * node = new Node(key, value);
+        if (root == NULL){
+            return node;
         }
     }
+
+    Node * l_rotate(Node* root){
+        Node * new_root = root->right;
+        Node * temp = root->right->left;
+        root->right = NULL;
+        new_root->left = root;
+        new_root->left->right = temp;
+        return new_root;
+
+    }
+    Node * lr_rotate(Node * root){
+
+    }
+    Node * r_rotate(Node * root){
+        Node * new_root = root->left;
+        Node * temp = root->left->right;
+        root->left = NULL;
+        new_root->right = root;
+        new_root->right->left = temp;
+        return new_root;
+    }
+    Node * rl_rotate(Node * root){
+
+    }
+    
     
 };
 
@@ -57,15 +88,15 @@ void printTree(Node* root){
     }
 
 int main(){
-    Node* root = new Node(1);
-    Node* a = new Node(2);
-    Node* b = new Node(3);
+    Node* root = new Node(1,4);
+    Node* a = new Node(2,6);
+    Node* b = new Node(3,8);
     root->left = a;
     root->right = b;
     // printTree(root);
 
     Tree* my_tree = new Tree(root, 100);
-    printTree(root);
+    cout << my_tree->getNodeNum(root);
     cout << "\n";
     cout << my_tree->getHeight(root->left);
 }
