@@ -32,6 +32,17 @@ class Tree{
             return 1 + max(getHeight(root->left), getHeight(root->right));
         }
     }
+    Node * insert(Node* newNode){
+        if(this->root == NULL){
+            this->root = newNode;
+            return newNode;
+        }
+        else{
+            if (newNode->val < this->root->val){
+                return this->root->left.insert(newNode);
+            }
+        }
+    }
     
 };
 
@@ -46,8 +57,6 @@ void printTree(Node* root){
     }
 
 int main(){
-    
-
     Node* root = new Node(1);
     Node* a = new Node(2);
     Node* b = new Node(3);
@@ -58,5 +67,5 @@ int main(){
     Tree* my_tree = new Tree(root, 100);
     printTree(root);
     cout << "\n";
-    cout << my_tree->getHeight(root);
+    cout << my_tree->getHeight(root->left);
 }
