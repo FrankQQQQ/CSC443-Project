@@ -59,9 +59,7 @@ class Tree{
         return new_root;
 
     }
-    Node * lr_rotate(Node * root){
 
-    }
     Node * r_rotate(Node * root){
         Node * new_root = root->left;
         Node * temp = root->left->right;
@@ -70,8 +68,17 @@ class Tree{
         new_root->right->left = temp;
         return new_root;
     }
-    Node * rl_rotate(Node * root){
 
+    Node * lr_rotate(Node * root){
+        Node* new_left = l_rotate(root->left);
+        root->left = new_left;
+        return r_rotate(root);
+
+    }
+    Node * rl_rotate(Node * root){
+        Node * new_right = r_rotate(root->right);
+        root->right = new_right;
+        return l_rotate(root);
     }
     
     
