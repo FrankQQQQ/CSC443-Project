@@ -3,4 +3,4 @@ project(KV_STORE)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(KVStoreCommandLine KVStoreCommandLine.cpp KVStore.h Memtable.h)
+add_executable(KVStoreCommandLine KVStoreCommandLine.cpp KVStore.h Memtable.h KVPair.cpp KVPair.h)
