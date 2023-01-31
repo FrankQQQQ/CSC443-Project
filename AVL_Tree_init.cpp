@@ -2,22 +2,22 @@
 using namespace std;
 #include <vector>
 #include <string>
-
+#include <queue>
 
 class Node{
     // Node Class
     public:
     string key;
     string val;
-    int factor;
+    int height;
     Node * left;
     Node * right;
     Node(string key, string value){
         this->key = key;
         this->val = value;
-        this->left = nullptr;
-        this->right = nullptr;
-        this->factor = -1;
+        this->left = NULL;
+        this->right = NULL;
+        this->height = 1;
     }
  };
 
@@ -38,6 +38,23 @@ class Tree{
             return 1 + max(getHeight(root->left), getHeight(root->right));
         }
     }
+
+    int getBalance(Node * root){
+        if(!root || (!root->left && !root->right)){
+            return 0;
+        }
+        else if (root->left && root->right == NULL){
+            return root->left->height;
+        }
+        else if (root->right && root->left == NULL){
+            return -root->right->height;
+        }
+        else{
+            return root->left - root->right;
+        }
+
+    }
+
     int getNodeNum(Node *root){
         if (root == NULL){
             return 0;
@@ -48,8 +65,36 @@ class Tree{
     Node* insert(Node *root, string key, string value){
         Node * node = new Node(key, value);
         if (root == NULL){
-            return node;
+            root = node;
+            return root;
         }
+        else{
+            if(key.compare(root->key) < 0){
+                //insert left
+                root->left = insert(root->left, key, value);
+            }
+            else{
+                root->right = insert(root->right, key, value);
+            }
+        }
+
+        root->height = getHeight(root);
+
+        //perform rotation operation
+        // if(getBalance(root)==2 && getBalance(root->left)==1){
+        //     root = l_rotate(root);
+        // }
+        // else if(getBalance(root)==-2 && getBalance(root->right)==-1){
+        //     root = r_rotate(root);
+        // }
+        // else if(getBalance(root)==-2 && getBalance(root->right)==1){
+        //     root = rl_rotate(root);
+        // }
+        // else if(getBalance(root)==2 && getBalance(root->left)==-1){
+        //     root = lr_rotate(root);
+        // }        
+
+        return root;
     }
 
     Node * l_rotate(Node* root){
@@ -129,15 +174,52 @@ vector<vector<Node*>> levelOrder(Node * root){
     return result;
 }
 
+    void levelorder_newline(struct Node *v){
+        queue <struct Node *> q;
+        struct Node *cur;
+        q.push(v);
+        q.push(NULL);      
+
+        while(!q.empty()){
+            cur = q.front();
+            q.pop();
+            if(cur == NULL && q.size()!=0){
+                cout<<"\n";
+                
+                q.push(NULL);
+                continue;
+            }
+            if(cur!=NULL){
+                cout<<" "<<cur->key;
+
+                if (cur->left!=NULL){
+                q.push(cur->left);
+                }
+                if (cur->right!=NULL){
+                    q.push(cur->right);
+                }
+            }
+            
+            
+        }
+    }
+
+
+
 int main(){
     Node* root = new Node("1","4");
-    Node* a = new Node("2","6");
-    Node* b = new Node("3","8");
-    root->left = a;
-    root->right = b;
-    printTree(root);
+
+    
 
     Tree* my_tree = new Tree(root, 100);
+    my_tree->insert(root, "2", "2");
+    my_tree->insert(root, "1", "2");
+    my_tree->insert(root, "7", "2");
+    my_tree->insert(root, "4", "2");
+    my_tree->insert(root, "0", "2");
+    my_tree->insert(root, "8", "2");
+    printTree(root);
+    // levelorder_newline(root);
     // cout << my_tree->getNodeNum(root);
     
 }
