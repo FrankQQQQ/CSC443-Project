@@ -4,10 +4,6 @@
 #include "SortedStringsTableDriver.h"
 namespace fs = std::filesystem;
 
-const auto static SST_FILE_HEAD = "SST_";
-const auto static SST_FILE_EXTENSION = ".bin";
-const auto static SST_FILE_DELIMITER = ',';
-
 SortedStringsTableDriver::SortedStringsTableDriver(const string &directory) {
     auto dirPath = fs::path{directory};
     if (!fs::exists(dirPath) || !fs::is_directory(dirPath)) {

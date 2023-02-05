@@ -7,6 +7,11 @@
 
 using std::string, std::vector;
 
+
+const auto static SST_FILE_HEAD = "SST_";
+const auto static SST_FILE_EXTENSION = ".bin";
+const auto static SST_FILE_DELIMITER = ',';
+
 class SortedStringsTableDriver {
 public:
     explicit SortedStringsTableDriver(const string &directory);

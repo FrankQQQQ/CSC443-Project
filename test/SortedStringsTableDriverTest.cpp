@@ -4,8 +4,19 @@
 #include "../SortedStringsTableDriver.h"
 
 const string TEST_DIR = "Testing";
+namespace fs = std::filesystem;
+
+void cleanupSSTFiles() {
+    auto dirPath = fs::path{TEST_DIR};
+    for (auto const &entry : fs::directory_iterator(dirPath)) {
+        if (fs::is_regular_file(entry.status()) && entry.path().filename().extension() == SST_FILE_EXTENSION) {
+            fs::remove(entry.path());
+        }
+    }
+}
 
 SCENARIO("storeToSST_then_get") {
+    cleanupSSTFiles();
     GIVEN("a kvPair") {
         string key = "key";
         string value = "value";
@@ -19,4 +30,5 @@ SCENARIO("storeToSST_then_get") {
             }
         }
     }
+    cleanupSSTFiles();
 }
