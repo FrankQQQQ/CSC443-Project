@@ -20,15 +20,13 @@ target_link_libraries(KVStoreCommandLine kv_store)
 
 #############################################
 # Unit tests
-
 # enable CTest Testing
 enable_testing()
 
 # Add a testing executable
-add_executable(unit_tests test/SortedStringsTableDriverTest.cpp)
-
-target_link_libraries(unit_tests
+add_executable(SortedStringsTableDriverTest test/SortedStringsTableDriverTest.cpp)
+target_link_libraries(SortedStringsTableDriverTest
         kv_store
         Catch2::Test)
 
-add_test(test_all unit_tests)
+add_test(test_SortedStringsTableDriverTest SortedStringsTableDriverTest)

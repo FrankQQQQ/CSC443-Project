@@ -6,7 +6,7 @@ namespace fs = std::filesystem;
 
 const auto static SST_FILE_HEAD = "SST_";
 const auto static SST_FILE_EXTENSION = ".bin";
-const auto static SST_FILE_DELIMITER = ",";
+const auto static SST_FILE_DELIMITER = ',';
 
 SortedStringsTableDriver::SortedStringsTableDriver(const string &directory) {
     auto dirPath = fs::path{directory};
@@ -40,9 +40,9 @@ void SortedStringsTableDriver::storeToSst(const vector<KVPair> &kvPairs) const {
     file.open(formatSstFilePath(dirPath));
     if (file.is_open()) {
         for (auto pair : kvPairs) {
-            file << pair.getKey() << SST_FILE_DELIMITER << pair.getKey() << "\n";
+            file << pair.getKey() << SST_FILE_DELIMITER << pair.getValue() << "\n";
         }
-        file << std::endl;
+        file.flush();
         file.close();
     }
 }
@@ -52,29 +52,27 @@ void SortedStringsTableDriver::storeToSst(const vector<KVPair> &kvPairs) const {
 const string SortedStringsTableDriver::get(const string &key) const {
     // iterate through sst files under the directory
     for (auto const &entry : fs::directory_iterator(dirPath)) {
-        auto filePath = entry.path().filename();
-        if (fs::is_regular_file(entry.status()) && filePath.extension() == SST_FILE_EXTENSION) {
+        if (fs::is_regular_file(entry.status())&& entry.path().filename().extension() == SST_FILE_EXTENSION) {
             std::ifstream file;
-            file.open(filePath);
+            file.open(entry.path());
             // TODO: binary search for a key
-            if (file.is_open()) {
-                string str;
-                while (!file.eof()) {
-                    getline(file, str);
-                    int delimitIdx = str.find(SST_FILE_DELIMITER);
-                    if (delimitIdx != std::string::npos) {
-                        // if the key exists, close the file and return the value
-                        string curKey = str.substr(0, delimitIdx);
-                        if (curKey == key) {
-                            string value = str.substr(delimitIdx + 1);
-                            file.close();
-                            return value;
-                        }
-                    }
+            string str;
+            while (file.is_open() && !file.eof()) {
+                string curKey;
+                string curValue;
+                getline(file, curKey, SST_FILE_DELIMITER);
+                if (curKey == "") {
+                    continue;
+                }
+                if (curKey == key) {
+                    getline(file, curValue);
+                    // if the key exists, close the file and return the value
+                    file.close();
+                    return curValue;
                 }
             }
             file.close();
         }
     }
-    return nullptr;
+    return "";
 }
