@@ -25,7 +25,7 @@ void SortedStringsTableDriver::setDirPath(const fs::path &dirPath) {
     this->dirPath = dirPath;
 }
 
-const fs::path &formatSstFilePath(const fs::path &dirPath) {
+const fs::path formatSstFilePath(const fs::path &dirPath) {
     auto now = std::chrono::system_clock::now();
     auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
     auto millis_since_1970 = now_ms.time_since_epoch().count();
@@ -49,7 +49,7 @@ void SortedStringsTableDriver::storeToSst(const vector<KVPair> &kvPairs) const {
 
 // create a binary search that returns pointer to a file
 
-const string &SortedStringsTableDriver::get(const string &key) const {
+const string SortedStringsTableDriver::get(const string &key) const {
     // iterate through sst files under the directory
     for (auto const &entry : fs::directory_iterator(dirPath)) {
         auto filePath = entry.path().filename();
