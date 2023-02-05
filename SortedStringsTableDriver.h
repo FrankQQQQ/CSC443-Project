@@ -9,18 +9,15 @@ using std::string, std::vector;
 
 class SortedStringsTableDriver {
 public:
-
-private:
-    string directory;
-public:
     explicit SortedStringsTableDriver(const string &directory);
 
-    const string &getDirectory() const;
-    void setDirectory(const string &directory);
-    const string &getKey() const;
-    vector<KVPair> scan(const string &key1, const string &key2) const;
-    void storeToDirectory(const vector<KVPair> &kvPairs);
-
+    const std::filesystem::path &getDirPath() const;
+    void setDirPath(const std::filesystem::path &directory);
+    void storeToSst(const vector<KVPair> &kvPairs) const;
+    const string &get(const string &key) const;
+    const vector<KVPair> &scan(const string &key1, const string &key2) const;
+private:
+    std::filesystem::path dirPath;
 };
 
 
