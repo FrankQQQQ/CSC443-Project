@@ -23,10 +23,10 @@ void SortedStringsTableDriver::setDirPath(const fs::path &dirPath) {
 
 const fs::path formatSstFilePath(const fs::path &dirPath) {
     auto now = std::chrono::system_clock::now();
-    auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
-    auto millis_since_1970 = now_ms.time_since_epoch().count();
+    auto now_ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+    auto nanos_since_1970 = now_ns.time_since_epoch().count();
 
-    const auto filename = SST_FILE_HEAD + std::to_string(millis_since_1970) + SST_FILE_EXTENSION;
+    const auto filename = SST_FILE_HEAD + std::to_string(nanos_since_1970) + SST_FILE_EXTENSION;
     const auto sstPath = dirPath / filename;
     return sstPath;
 }
@@ -57,7 +57,7 @@ const string SortedStringsTableDriver::get(const string &key) const {
                 string curKey;
                 string curValue;
                 getline(file, curKey, SST_FILE_DELIMITER);
-                if (curKey == "") {
+                if (curKey.empty()) {
                     continue;
                 }
                 if (curKey == key) {
@@ -71,4 +71,37 @@ const string SortedStringsTableDriver::get(const string &key) const {
         }
     }
     return "";
+}
+
+const vector<KVPair> SortedStringsTableDriver::scan(const string &key1, const string &key2) const {
+    // TODO: Optimization, initialize according to memtable size for
+    vector<KVPair> kvPairsInRange;
+
+    // iterate through sst files under the directory
+    for (auto const &entry : fs::directory_iterator(dirPath)) {
+        if (fs::is_regular_file(entry.status())&& entry.path().filename().extension() == SST_FILE_EXTENSION) {
+            std::ifstream file;
+            file.open(entry.path());
+            // TODO: binary search for a key
+            string str;
+            while (file.is_open() && !file.eof()) {
+                string curKey;
+                string curValue;
+                getline(file, curKey, SST_FILE_DELIMITER);
+                if (curKey.empty()) {
+                    continue;
+                }
+                if (key1 <= curKey && curKey <= key2) {
+                    getline(file, curValue);
+                    // if the key exists, close the file and return the value
+                    KVPair kvPair {curKey, curValue};
+                    kvPairsInRange.push_back(kvPair);
+                }
+            }
+            file.close();
+        }
+    }
+    // TODO: optimization, use merge sort k-lists
+    std::sort(kvPairsInRange.begin(), kvPairsInRange.end());
+    return kvPairsInRange;
 }

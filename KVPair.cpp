@@ -20,3 +20,16 @@ KVPair::KVPair(const string &key, const string &value) {
     setKey(key);
     setValue(value);
 }
+
+bool KVPair::operator==(const KVPair &other) const {
+    return other.getKey() == this->getKey() && other.getValue() == this->getValue();
+}
+
+bool KVPair::operator<(const KVPair &other) const {
+    return this->getKey() < other.getKey();
+}
+
+std::ostream &operator<<(std::ostream &stream, const KVPair &kvPair) {
+    stream << "(" << kvPair.getKey() << ", " << kvPair.getValue() << ")";
+    return stream;
+}

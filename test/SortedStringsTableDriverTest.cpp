@@ -32,3 +32,31 @@ SCENARIO("storeToSST_then_get") {
     }
     cleanupSSTFiles();
 }
+
+SCENARIO("multiple_storeToSST_then_scan") {
+    cleanupSSTFiles();
+    SortedStringsTableDriver sstDriver {TEST_DIR};
+    GIVEN("a 100 kvPairs stored into 10 sst") {
+        string key = "key";
+        string value = "value";
+        for (auto i = 0; i < 10; i++) {
+            vector<KVPair> kvPairs;
+            for (auto j = i * 10; j < i * 10 + 10; j++) {
+                kvPairs.emplace_back(key + std::to_string(j), value + std::to_string(j));
+            }
+            sstDriver.storeToSst(kvPairs);
+        }
+        WHEN("scan") {
+            vector<KVPair> actual = sstDriver.scan("key0", "key99");
+            THEN("should return the kvPairs stored one-to-one in natural order") {
+                REQUIRE(actual.size() == 100);
+                for (auto i = 0; i < 100; i++) {
+                    KVPair expected {key + std::to_string(i), value + std::to_string(i)};
+                    auto found = std::find(actual.begin(), actual.end(), expected);
+                    REQUIRE(found != actual.end());
+                }
+            }
+        }
+    }
+    cleanupSSTFiles();
+}
