@@ -1,0 +1,13 @@
+/cmake-build-build/
+
+/.idea
+
+CMakeFiles
+/CMakeCache.txt
+/cmake_install.cmake
+.cmake/
+
+Testing/*
+
+Makefile
+/CTestTestfile.cmake
