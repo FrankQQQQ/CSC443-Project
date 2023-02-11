@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(KV_STORE LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+# set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_FLAGS "-lstdc++fs")
 
 # add the CMakeFile that defines catch2
 add_subdirectory(3rd_party/catch2)

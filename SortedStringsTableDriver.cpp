@@ -2,6 +2,8 @@
 #include <fstream>
 #include <chrono>
 #include "SortedStringsTableDriver.h"
+#include <filesystem>
+#include <algorithm>
 namespace fs = std::filesystem;
 
 SortedStringsTableDriver::SortedStringsTableDriver(const string &directory) {

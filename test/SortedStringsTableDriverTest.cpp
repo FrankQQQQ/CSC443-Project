@@ -2,9 +2,10 @@
 #include "catch2/catch.hpp"
 #include <string>
 #include "../SortedStringsTableDriver.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
 const string TEST_DIR = "Testing";
-namespace fs = std::filesystem;
 
 void cleanupSSTFiles() {
     auto dirPath = fs::path{TEST_DIR};

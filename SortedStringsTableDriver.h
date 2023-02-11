@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include "KVPair.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
 using std::string, std::vector;
 
@@ -16,13 +18,13 @@ class SortedStringsTableDriver {
 public:
     explicit SortedStringsTableDriver(const string &directory);
 
-    const std::filesystem::path &getDirPath() const;
-    void setDirPath(const std::filesystem::path &directory);
+    const fs::path &getDirPath() const;
+    void setDirPath(const fs::path &directory);
     void storeToSst(const vector<KVPair> &kvPairs) const;
     const string get(const string &key) const;
     const vector<KVPair> scan(const string &key1, const string &key2) const;
 private:
-    std::filesystem::path dirPath;
+    fs::path dirPath;
 };
 
 
