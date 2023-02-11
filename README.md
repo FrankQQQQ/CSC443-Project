@@ -3,14 +3,14 @@ Final project for CSC443
 
 To run in command line:
 ```shell
-cmake .
-make
+cmake . -DCMAKE_VERBOSE_MAKEFILE=ON &&
+make &&
 ./KVStoreCommandLine
 ```
 
 To test:
 ```shell
-cmake .
-make
+cmake . -DCMAKE_VERBOSE_MAKEFILE=ON &&
+make &&
 make test
 ```
