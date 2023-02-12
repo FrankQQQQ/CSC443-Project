@@ -29,19 +29,36 @@ class Tree{
         this->root = my_root;
         this->size = num;
     }
-    
-    int getHeight(Node * root){
-        if (root == NULL){
+    int treeHeight(Node* root){
+        if (! root){
             return 0;
         }
         else{
-            return 1 + max(getHeight(root->left), getHeight(root->right));
+            return 1 + max(this->treeHeight(root->left), this->treeHeight(root->right));
         }
+    }
+    
+    int getHeight(Node * p){
+        if(p->left && p->right){
+            if (p->left->height < p->right->height)
+                return p->right->height + 1;
+            else return  p->left->height + 1;
+            }
+            else if(p->left && p->right == NULL){
+               return p->left->height + 1;
+            }
+            else if(p->left ==NULL && p->right){
+               return p->right->height + 1;
+            }
+            return 0;
     }
 
     int getBalance(Node * root){
-        if(!root || (!root->left && !root->right)){
-            return 0;
+        // if(!root || (!root->left && !root->right)){
+        //     return 0;
+        // }
+        if (root->left && root->right){
+            return root->left->height - root->right->height;
         }
         else if (root->left && root->right == NULL){
             return root->left->height;
@@ -49,10 +66,7 @@ class Tree{
         else if (root->right && root->left == NULL){
             return -root->right->height;
         }
-        else{
-            return root->left - root->right;
-        }
-
+        
     }
 
     int getNodeNum(Node *root){
@@ -73,59 +87,86 @@ class Tree{
                 //insert left
                 root->left = insert(root->left, key, value);
             }
-            else{
+            else if (key.compare(root->key) > 0){
                 root->right = insert(root->right, key, value);
+            }
+            else{
+                cout << "Not support duplicate key at this stage\n";
             }
         }
 
         root->height = getHeight(root);
 
         //perform rotation operation
-        // if(getBalance(root)==2 && getBalance(root->left)==1){
-        //     root = l_rotate(root);
-        // }
-        // else if(getBalance(root)==-2 && getBalance(root->right)==-1){
-        //     root = r_rotate(root);
-        // }
-        // else if(getBalance(root)==-2 && getBalance(root->right)==1){
-        //     root = rl_rotate(root);
-        // }
-        // else if(getBalance(root)==2 && getBalance(root->left)==-1){
-        //     root = lr_rotate(root);
-        // }        
+        int bf = getBalance(root);
+        if(bf > 1 && key < root->left->key){
+            return r_rotate(root);
+        }
+        else if(bf < -1 && key > root->right->key){
+            return l_rotate(root);
+        }
+        else if(bf > 1 && key > root->left->key){
+            root->left = l_rotate(root->left);
+            return r_rotate(root);
+        }
+        else if(bf < -1 && key < root->right->key){
+            root->right = r_rotate(root->right);
+            return l_rotate(root);
+        }        
 
         return root;
     }
 
     Node * l_rotate(Node* root){
-        Node * new_root = root->right;
-        Node * temp = root->right->left;
-        root->right = NULL;
-        new_root->left = root;
-        new_root->left->right = temp;
-        return new_root;
+        Node * x = root->right;
+        Node * temp = x->left;
+        x->left = root;
+        root->right = temp;
+        return x;
+
 
     }
 
-    Node * r_rotate(Node * root){
-        Node * new_root = root->left;
-        Node * temp = root->left->right;
-        root->left = NULL;
-        new_root->right = root;
-        new_root->right->left = temp;
-        return new_root;
+    Node * r_rotate(Node * root){;
+        Node *x = root->left;
+        Node * temp = x->right;
+        x->right = root;
+        root->left = temp;
+        return x;
     }
 
     Node * lr_rotate(Node * root){
-        Node* new_left = l_rotate(root->left);
-        root->left = new_left;
-        return r_rotate(root);
+        Node *p;
+        Node *tp;
+        Node *tp2;
+        p = root;
+        tp = p->left;
+        tp2 =p->left->right;
+
+        p -> left = tp2->right;
+        tp ->right = tp2->left;
+        tp2 ->right = p;
+        tp2->left = tp; 
+        
+        return tp2; 
+
 
     }
     Node * rl_rotate(Node * root){
-        Node * new_right = r_rotate(root->right);
-        root->right = new_right;
-        return l_rotate(root);
+        Node *p;
+        Node *tp;
+        Node *tp2;
+        p = root;
+        tp = p->right;
+        tp2 =p->right->left;
+
+        p -> right = tp2->left;
+        tp ->left = tp2->right;
+        tp2 ->left = p;
+        tp2->right = tp; 
+        
+        return tp2; 
+
     }
     
     
@@ -142,39 +183,7 @@ void printTree(Node* root){
     }
 
 
-vector<vector<Node*>> levelOrder(Node * root){
-    // cout << "start";
-    vector<Node*> q;
-    q.push_back(root);
-    vector<vector<Node*>> result;
-    while (! q.empty()){
-        vector<Node*> k;
-        result.push_back(k);
-        for (int i = 0; i < q.size(); i += 1){
-            Node * cur = q[0];
-            q.erase(q.begin());
-            result[result.size() - 1].push_back(cur);
-            if (cur->left != NULL){
-                q.push_back(cur->left);
-            }
-            if (cur->right != NULL){
-                q.push_back(cur->right);
-            }
-            
-        }
-    }
-    for (int i = 0; i < result.size(); i += 1){
-        
-        for (int j = 0; j < result[i].size(); j += 1){
-            cout << result[i][j]->key;
-        }
-        cout << "\n";
-
-    }
-    return result;
-}
-
-    void levelorder_newline(struct Node *v){
+    void levelOrder(struct Node *v){
         queue <struct Node *> q;
         struct Node *cur;
         q.push(v);
@@ -212,14 +221,25 @@ int main(){
     
 
     Tree* my_tree = new Tree(root, 100);
-    my_tree->insert(root, "2", "2");
-    my_tree->insert(root, "1", "2");
-    my_tree->insert(root, "7", "2");
-    my_tree->insert(root, "4", "2");
-    my_tree->insert(root, "0", "2");
-    my_tree->insert(root, "8", "2");
-    printTree(root);
-    // levelorder_newline(root);
+    my_tree->root = my_tree->insert(my_tree->root, "2", "2");
+    my_tree->root = my_tree->insert(my_tree->root, "3", "2");
+    my_tree->root = my_tree->insert(my_tree->root, "4", "2");
+    my_tree->root = my_tree->insert(my_tree->root, "5", "2");
+    my_tree->root = my_tree->insert(my_tree->root, "6", "2");
+    my_tree->root = my_tree->insert(my_tree->root, "7", "2");
+    // my_tree->root = my_tree->insert(my_tree->root, "8", "2");
+
+    
+
+
+    // printTree(root);
+    levelOrder(my_tree->root);
+
+    cout << "\n";
+    // cout << my_tree->getHeight(my_tree->root);
+    // cout << my_tree->treeHeight(my_tree->root);
+    cout << "\n";
+    
     // cout << my_tree->getNodeNum(root);
     
 }
