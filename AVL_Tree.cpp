@@ -3,6 +3,7 @@ using namespace std;
 #include <vector>
 #include <string>
 #include <queue>
+#include "KVPair.h"
 
 class Node{
     // Node Class
@@ -21,11 +22,11 @@ class Node{
     }
  };
 
-class Tree{
+class Memtable{
     public:
     Node * root;
     int size;
-    Tree(Node * my_root, int num){
+    Memtable(Node * my_root, int num){
         this->root = my_root;
         this->size = num;
     }
@@ -76,7 +77,12 @@ class Tree{
         return (1 + getNodeNum(root->left) + getNodeNum(root->right));
     }
 
-    Node* insert(Node *root, string key, string value){
+
+
+    Node* putKV(Node *root, string key, string value){
+        if (getNodeNum(root) >= size){
+            // transfer to sst table.
+        }
         Node * node = new Node(key, value);
         if (root == NULL){
             root = node;
@@ -85,10 +91,10 @@ class Tree{
         else{
             if(key.compare(root->key) < 0){
                 //insert left
-                root->left = insert(root->left, key, value);
+                root->left = putKV(root->left, key, value);
             }
             else if (key.compare(root->key) > 0){
-                root->right = insert(root->right, key, value);
+                root->right = putKV(root->right, key, value);
             }
             else{
                 cout << "Not support duplicate key at this stage\n";
@@ -152,42 +158,30 @@ class Tree{
         }
     }
 
-    // void helperScan(vector<vector<string, string>>* result, Node * root, string small, string large){
-    //     if (!root){
-    //             return ;
-    //         }
-    //     else if (root->key < small){
-    //         helperScan(result, root->right, small, large);
-    //     }
-    //     else if (root->key > small && root->key < large){
-    //         vector<string, string> temp = {root->key, root->val};
-    //         result->push_back(temp);
-    //     }
-    //     else{
-    //         helperScan(result, root->left, small, large);
-    //     }
 
-    // }
-
-    // vector<vector<string, string>> scanKV(Node* root, string small, string large){
-    //     vector<vector<string, string>> * result;
+    void helperScan(Node *root, string small, string large, vector<string>& result){
+        if(!root){
+            return;
+        }
+        helperScan(root->left, small, large, result);
+        if (small.compare(root->key) <= 0 && large.compare(root->key) >= 0){
+            // cout << "[" + root->key + "," + root->val + "]";
+            result.push_back(root->key);
+        }
         
-    
-    //     this->helperScan(result, root, small, large);
-    //     cout << result;
+        helperScan(root->right, small, large, result); 
+    }
 
 
-    // }
-    
-    
-    
-};
+    vector<string> scanKV(Node *root, string small, string large){
+        vector<string> result;
+        this->helperScan(root, small, large, result);
+        return result;
+    }
 
-
-
-    void levelOrder(struct Node *v){
-        queue <struct Node *> q;
-        struct Node *cur;
+   void printTree(Node *v){
+        queue < Node *> q;
+        Node *cur;
         q.push(v);
         q.push(NULL);      
 
@@ -214,33 +208,47 @@ class Tree{
             
         }
     }
+    
+    
+    
+};
+
+
+
+    
 
 
 
 int main(){
-    Node* root = new Node("1","4");
-
     
+    //create memtable, set maximum capacity
+    Memtable* my_tree = new Memtable(NULL, 100);
 
-    Tree* my_tree = new Tree(root, 100);
-    my_tree->root = my_tree->insert(my_tree->root, "2", "3");
-    my_tree->root = my_tree->insert(my_tree->root, "3", "4");
-    my_tree->root = my_tree->insert(my_tree->root, "4", "5");
-    my_tree->root = my_tree->insert(my_tree->root, "5", "6");
-    my_tree->root = my_tree->insert(my_tree->root, "6", "7");
-    my_tree->root = my_tree->insert(my_tree->root, "7", "8");
-    my_tree->root = my_tree->insert(my_tree->root, "8", "9");
-
-    
+    //putKV
+    my_tree->root = my_tree->putKV(my_tree->root, "1", "a");
+    my_tree->root = my_tree->putKV(my_tree->root, "2", "b");
+    my_tree->root = my_tree->putKV(my_tree->root, "3", "c");
+    my_tree->root = my_tree->putKV(my_tree->root, "4", "d");
+    my_tree->root = my_tree->putKV(my_tree->root, "5", "e");
+    my_tree->root = my_tree->putKV(my_tree->root, "6", "f");
+    my_tree->root = my_tree->putKV(my_tree->root, "7", "g");
+    my_tree->root = my_tree->putKV(my_tree->root, "8", "h");
 
 
     // printTree(root);
-    levelOrder(my_tree->root);
+    my_tree->printTree(my_tree->root);
+    cout << "\n\n";
 
-    cout << "\n";
+    //getKV
+    cout << my_tree->getKV(my_tree->root, "3");
+    cout << "\n\n";
 
-    cout << my_tree->getKV(my_tree->root, "6");
-    
-    cout << "\n";
-    // my_tree->scanKV(my_tree->root, "2", "4");
+
+    //scanKV
+    vector<string> result = my_tree->scanKV(my_tree->root, "2", "6");
+    for (int i = 0; i < result.size(); i++){
+        cout << result[i];
+    }
+    cout << "\n\n";
+
 }

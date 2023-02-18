@@ -43,7 +43,7 @@ int main() {
             //TODO open
         }
         else if (command == "new"){
-
+            
         }
         
         
