@@ -20,17 +20,17 @@ using namespace std;
 class SST{
     public:
     string path;
-    void store(vector<KVPair> vec, string dirname){
+    void store(vector<KVPair> pairs, string dirname){
         ofstream file("myfile.txt");
         if (file.is_open()) {
-            file << vec.size() << "\n";
-            for (KVPair pair : vec) {
+            file << pairs.size() << ";" << pairs[0].getKey() << ";" << pairs[pairs.size() - 1].getKey() << "\n";
+            for (KVPair pair : pairs) {
                 file << pair.getKey() <<";"<< pair.getValue() << endl;
         }
         file.close();
         }
     }
-    
+
     string getTime(){
         time_t now = time(nullptr);
         tm local_time = *localtime(&now);
@@ -53,15 +53,6 @@ class SST{
 
 };
 
-// void writeVectorToFile(vector<string>& strings, string filename) {
-//   ofstream file(filename);
-//   if (file.is_open()) {
-//     for (auto& str : strings) {
-//       file << str << endl; // Write each string followed by a newline character
-//     }
-//     file.close();
-//   }
-// }
 
 
 
@@ -92,6 +83,16 @@ int main(){
     vector<KVPair> pairs = my_tree->purge(my_tree->root);
 
     my_sst.store(pairs, "aaa");
+    cout << "\n\n";
+
+    string a = "111";
+    string b = "2";
+    if(a.compare(b) < 0){
+        cout << "<\n";
+    }
+    else{
+        cout << ">\n";
+    }
 
 
 }
