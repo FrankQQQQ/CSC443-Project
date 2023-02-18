@@ -11,3 +11,4 @@ Testing/*
 
 Makefile
 /CTestTestfile.cmake
+/.exe
