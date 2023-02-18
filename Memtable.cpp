@@ -3,7 +3,7 @@ using namespace std;
 #include <vector>
 #include <string>
 #include <queue>
-#include "KVPair.h"
+
 
 class Node{
     // Node Class
@@ -22,6 +22,26 @@ class Node{
     }
  };
 
+class KVPair {
+public:
+    string key;
+    string val;
+    KVPair(string key, string value){
+        this->key = key;
+        this->val = value;
+    }
+
+    string getKey(){
+        return this->key;
+    }
+    string getValue(){
+        return this->val;
+    }
+    string printKVPair(){
+        return "[" + this->key + "," + this->val + "]";
+    }
+};
+
 class Memtable{
     public:
     Node * root;
@@ -30,6 +50,7 @@ class Memtable{
         this->root = my_root;
         this->size = num;
     }
+
     int treeHeight(Node* root){
         if (! root){
             return 0;
@@ -55,9 +76,6 @@ class Memtable{
     }
 
     int getBalance(Node * root){
-        // if(!root || (!root->left && !root->right)){
-        //     return 0;
-        // }
         if (root->left && root->right){
             return root->left->height - root->right->height;
         }
@@ -159,23 +177,39 @@ class Memtable{
     }
 
 
-    void helperScan(Node *root, string small, string large, vector<string>& result){
+    void helperScan(Node *root, string small, string large, vector<KVPair>& result){
         if(!root){
             return;
         }
         helperScan(root->left, small, large, result);
         if (small.compare(root->key) <= 0 && large.compare(root->key) >= 0){
             // cout << "[" + root->key + "," + root->val + "]";
-            result.push_back(root->key);
+            result.push_back(KVPair(root->key, root->val));
         }
         
         helperScan(root->right, small, large, result); 
     }
 
 
-    vector<string> scanKV(Node *root, string small, string large){
-        vector<string> result;
+    vector<KVPair> scanKV(Node *root, string small, string large){
+        vector<KVPair> result;
         this->helperScan(root, small, large, result);
+        return result;
+    }
+
+    void helperPurge(Node*root, vector<KVPair>& result){
+        if (!root){
+            return;
+        }
+        helperPurge(root->left, result);
+        result.push_back(KVPair(root->key, root->val));
+        helperPurge(root->right, result);
+
+    }
+
+    vector<KVPair> purge(Node* root){
+        vector<KVPair> result;
+        this->helperPurge(root, result);
         return result;
     }
 
@@ -219,36 +253,40 @@ class Memtable{
 
 
 
-int main(){
+// int main(){
     
-    //create memtable, set maximum capacity
-    Memtable* my_tree = new Memtable(NULL, 100);
+//     //create memtable, set maximum capacity
+//     Memtable* my_tree = new Memtable(NULL, 100);
 
-    //putKV
-    my_tree->root = my_tree->putKV(my_tree->root, "1", "a");
-    my_tree->root = my_tree->putKV(my_tree->root, "2", "b");
-    my_tree->root = my_tree->putKV(my_tree->root, "3", "c");
-    my_tree->root = my_tree->putKV(my_tree->root, "4", "d");
-    my_tree->root = my_tree->putKV(my_tree->root, "5", "e");
-    my_tree->root = my_tree->putKV(my_tree->root, "6", "f");
-    my_tree->root = my_tree->putKV(my_tree->root, "7", "g");
-    my_tree->root = my_tree->putKV(my_tree->root, "8", "h");
-
-
-    // printTree(root);
-    my_tree->printTree(my_tree->root);
-    cout << "\n\n";
-
-    //getKV
-    cout << my_tree->getKV(my_tree->root, "3");
-    cout << "\n\n";
+//     //putKV
+//     my_tree->root = my_tree->putKV(my_tree->root, "1", "a");
+//     my_tree->root = my_tree->putKV(my_tree->root, "2", "b");
+//     my_tree->root = my_tree->putKV(my_tree->root, "3", "c");
+//     my_tree->root = my_tree->putKV(my_tree->root, "4", "d");
+//     my_tree->root = my_tree->putKV(my_tree->root, "5", "e");
+//     my_tree->root = my_tree->putKV(my_tree->root, "6", "f");
+//     my_tree->root = my_tree->putKV(my_tree->root, "7", "g");
+//     my_tree->root = my_tree->putKV(my_tree->root, "8", "h");
 
 
-    //scanKV
-    vector<string> result = my_tree->scanKV(my_tree->root, "2", "6");
-    for (int i = 0; i < result.size(); i++){
-        cout << result[i];
-    }
-    cout << "\n\n";
+//     // printTree(root);
+//     my_tree->printTree(my_tree->root);
+//     cout << "\n\n";
 
-}
+//     //getKV
+//     cout << my_tree->getKV(my_tree->root, "3");
+//     cout << "\n\n";
+
+
+//     //scanKV
+//     vector<KVPair> result = my_tree->scanKV(my_tree->root, "2", "6");
+//     for (int i = 0; i < result.size(); i++){
+//         cout << result[i].printKVPair();
+//     }
+//     cout << "\n\n";
+
+//     // purge
+    
+
+
+// }
