@@ -8,20 +8,13 @@ using namespace std;
 #include <ctime>    
 #include <fstream>
 
-// SortedStringsTableDriver::SortedStringsTableDriver(const string &directory) {
-//     auto dirPath = fs::path{directory};
-//     if (!fs::exists(dirPath) || !fs::is_directory(dirPath)) {
-//         std::cerr << "Invalid directory!" << std::endl;
-//         std::exit(-1);
-//     }
-//     setDirPath(dirPath);
-// }
-
 class SST{
     public:
     string path;
     void store(vector<KVPair> pairs, string dirname){
-        ofstream file("myfile.txt");
+        string filename ="a" + getTime() + ".txt";
+        cout << filename;
+        ofstream file(filename);
         if (file.is_open()) {
             file << pairs.size() << ";" << pairs[0].getKey() << ";" << pairs[pairs.size() - 1].getKey() << "\n";
             for (KVPair pair : pairs) {
@@ -85,14 +78,7 @@ int main(){
     my_sst.store(pairs, "aaa");
     cout << "\n\n";
 
-    string a = "111";
-    string b = "2";
-    if(a.compare(b) < 0){
-        cout << "<\n";
-    }
-    else{
-        cout << ">\n";
-    }
+    
 
 
 }
