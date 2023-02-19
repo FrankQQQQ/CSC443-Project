@@ -37,6 +37,9 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "chrono": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "array": "cpp",
+        "unordered_map": "cpp",
+        "filesystem": "cpp"
     }
 }

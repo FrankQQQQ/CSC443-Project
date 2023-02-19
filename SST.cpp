@@ -7,56 +7,85 @@ using namespace std;
 #include <chrono>
 #include <ctime>    
 #include <fstream>
+#include <filesystem>
 
 class SST{
     public:
     string path;
-    void store(vector<KVPair> pairs, string dirname){
-        string filename ="a" + getTime() + ".txt";
-        cout << filename;
-        ofstream file(filename);
-        if (file.is_open()) {
-            file << pairs.size() << ";" << pairs[0].getKey() << ";" << pairs[pairs.size() - 1].getKey() << "\n";
-            for (KVPair pair : pairs) {
-                file << pair.getKey() <<";"<< pair.getValue() << endl;
-        }
-        file.close();
+    void store(vector<KVPair> pairs, string dirname) {
+    // string filename = "a" + getTime() + ".txt";
+    string filename = "a.txt";
+    string path = "./" + dirname;
+    if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
+        // Create the directory if it does not exist
+        if (!filesystem::create_directory(path)) {
+            cerr << "Failed to create directory " << path << endl;
+            return;
         }
     }
+    path += "/" + filename;
+    ofstream file(path);
+    if (file.is_open()) {
+        file << pairs.size() << ";" << pairs[0].getKey() << ";" << pairs[pairs.size() - 1].getKey() << "\n";
+        for (KVPair pair : pairs) {
+            file << pair.getKey() << ";" << pair.getValue() << endl;
+        }
+        file.close();
+        cout << "File created: " << path << endl;
+    } else {
+        cerr << "Failed to create file " << path << endl;
+        return;
+    }
+}
+
 
     string getTime(){
         time_t now = time(nullptr);
         tm local_time = *localtime(&now);
         char time_str[100];
         strftime(time_str, sizeof(time_str), "%m-%d-%H:%M:%S", &local_time);
-        return time_str;
+        
+        return string(time_str);
+    }
+   
+
+
+string binarySearchFile(const string& filename, const string& targetKey, int lineCount) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        return "File not found!";
     }
 
-
-
-
-
-
-
-
-
-
-
+    int left = 1;
+    int right = lineCount;
+    while (left <= right) {
+        int middle = left + (right - left) / 2;
+        string line;
+        getline(file, line);
+        file.seekg(0, ios::beg);
+        for (int i = 1; i < middle; i++) {
+            getline(file, line);
+            cout << line;
+        }
+        string key = line.substr(0, line.find(';'));
+        if (key == targetKey) {
+            return line.substr(line.find(';') + 1);
+        } else if (key.compare(targetKey) < 0) {
+            left = middle + 1;
+        } else {
+            right = middle - 1;
+        }
+    }
+    return "Key not found!";
+}
 
 
 };
 
 
 
-
-
-
-// }
-
-
 int main(){
     SST my_sst = SST();
-    cout << my_sst.getTime();
 
 
         
@@ -77,7 +106,8 @@ int main(){
 
     my_sst.store(pairs, "aaa");
     cout << "\n\n";
-
+    // cout << my_sst.binarySearchFile("a.txt", "7", 8);
+    // cout << "\n\n";
     
 
 
