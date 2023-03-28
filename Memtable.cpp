@@ -3,7 +3,7 @@ using namespace std;
 #include <vector>
 #include <string>
 #include <queue>
-
+#include "run.h"
 
 class Node{
     // Node Class
@@ -13,12 +13,14 @@ class Node{
     int height;
     Node * left;
     Node * right;
+    
     Node(string key, string value){
         this->key = key;
         this->val = value;
         this->left = NULL;
         this->right = NULL;
         this->height = 1;
+        
     }
  };
 
@@ -46,7 +48,14 @@ class Memtable{
     public:
     Node * root;
     int size;
-    Memtable(Node * my_root, int num){
+    string name;
+    Memtable(Node * my_root, int num, string name){
+        this->root = my_root;
+        this->size = num;
+        this->name = name;
+    }
+
+    Memtable(Node* my_root, int num){
         this->root = my_root;
         this->size = num;
     }
@@ -61,6 +70,7 @@ class Memtable{
     }
     
     int getHeight(Node * p){
+        
         if(p->left && p->right){
             if (p->left->height < p->right->height)
                 return p->right->height + 1;
@@ -98,6 +108,10 @@ class Memtable{
 
 
     Node* putKV(Node *root, string key, string value){
+        // if(this->name == ""){
+        //     cout << "Database not opened \n";
+        //     return;
+        // }
         if (getNodeNum(root) >= size){
             // transfer to sst table.
         }
@@ -160,6 +174,10 @@ class Memtable{
     }
 
     string getKV(Node* root, string key){
+        // if(this->name == ""){
+        //     cout << "Database not opened \n";
+        //     return;
+        // }
         if (!root){
             return "not found";
         }

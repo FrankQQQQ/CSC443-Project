@@ -1,6 +1,6 @@
 #ifndef MEMTABLE_H
 #define MEMTABLE_H
-
+#include "run.h"
 
 #include<iostream>
 #include <vector>
@@ -36,6 +36,7 @@ class Memtable{
     public:
     Node * root;
     int size;
+    string name;
     Memtable(Node * my_root, int num);
     int treeHeight(Node* root);
     int getHeight(Node * p);

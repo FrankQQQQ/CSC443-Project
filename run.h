@@ -3,6 +3,12 @@
 
 #include <string>
 
-extern std::string DIR_NAME = "";
+extern string DIR_NAME = "cur";
+
+extern void updateDirName(string dir_name){
+    DIR_NAME = dir_name;
+    return;
+
+}
 
 #endif

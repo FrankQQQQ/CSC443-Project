@@ -40,6 +40,7 @@
         "fstream": "cpp",
         "array": "cpp",
         "unordered_map": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "queue": "cpp"
     }
 }

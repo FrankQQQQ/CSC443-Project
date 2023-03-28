@@ -5,6 +5,7 @@ using namespace std;
 #include "run.h"
 #include <vector>
 #include <sstream>
+#include "Memtable.cpp"
 
 string openFolder(string name) {
     string path = "./" + name;
@@ -30,32 +31,32 @@ string helperStrip(string str){
     str.erase(str.size() - 1);  // remove trailing double quote
     return str;
 }
-// int main() {
-//     string folderName = "testFolder";
-    // string path = openFolder(folderName);
-    // if (path != "") {
-    //     cout << "Folder created/opened: " << path << endl;
-    // } else {
-    //     cout << "Failed to create/open folder." << endl;
-    // }
-    // return 0;
-    
-// }
+
 
 int main() {
     string input;
+    // Memtable cur_memtable = 
+    Memtable* cur_memtable = new Memtable(NULL, 100);
     
     while (true) {
+        cout << "Type a command. \n";
+        cout << "Current Dir name is " + DIR_NAME + ".\n";
         getline(cin, input);
         
         if (input.find("open(") == 0 && input[input.length() - 1] == ')') {
             if (input.size() <= 8){
                 cout << "invalid\n";
                 continue;
+                
+
             }
             string dbname = input.substr(input.find_first_of("\"") + 1, input.find_last_of("\"") - input.find_first_of("\"") - 1);
             cout << "OPEN" << endl;
             cout  << dbname << endl;
+            updateDirName(dbname);
+
+
+
         }
         else if (input.find("put(") == 0 && input[input.length() - 1] == ')') {
             if (input.size() <= 10){
@@ -74,8 +75,12 @@ int main() {
                 continue;
             }
             cout << "PUT" << endl;
+            string key = helperStrip(tokens[0]);
+            string value = helperStrip(tokens[1]);
             cout <<"first: " << helperStrip(tokens[0]) << endl;
             cout << "second: " <<helperStrip(tokens[1]) << endl;
+            cur_memtable->putKV(cur_memtable->root, key, value);
+            
 
         }
 
@@ -84,9 +89,12 @@ int main() {
                 cout << "invalid\n";
                 continue;
             }
-            string result = input.substr(4, input.size() - 5);
+            string input = input.substr(4, input.size() - 5);
             cout << "GET" << endl;
-            cout << helperStrip(result) << endl;
+            string key = helperStrip(input);
+            cout << key << endl;
+            cur_memtable->getKV(cur_memtable->root, key);
+
         }
         else if (input.find("scan(") == 0 && input[input.length() - 1] == ')') {
             if (input.size() <= 12){
@@ -113,6 +121,17 @@ int main() {
             string result = input.substr(6, input.size() - 7);
             cout << result << endl;
             cout << helperStrip(result) << endl;
+            Memtable* cur_tree = new Memtable(NULL, 100);
+            if (helperStrip(result).compare(DIR_NAME) == 0){
+                updateDirName("");
+                cout << "Successfully closed Directory\n";
+                continue;
+            }
+            else{
+                cout << "Database is not opened. \n";
+                continue;
+            }
+            
             
         }
         else if(input == "help"){
