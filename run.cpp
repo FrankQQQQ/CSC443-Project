@@ -128,9 +128,25 @@ int main() {
                 tokens.push_back(token);
             }
             cout << "SCAN" << endl;
+            string first = helperStrip(tokens[0]);
+            string second = helperStrip(tokens[1]);
+            cout <<"first: " << first << endl;
+            cout << "second: " <<second << endl;
+
+            try
+            {                //scanKV
+                vector<KVPair> result = cur_memtable->scanKV(cur_memtable->root, first, second);
+                for (int i = 0; i < result.size(); i++){
+                    cout << result[i].printKVPair();
+                }
+                cout << "\n\n";
+
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
             
-            cout <<"first: " << helperStrip(tokens[0]) << endl;
-            cout << "second: " <<helperStrip(tokens[1]) << endl;
         }
         else if (input.find("close(") == 0 && input[input.length() - 1] == ')') {
             if (input.size() <= 9){
