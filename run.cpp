@@ -79,7 +79,16 @@ int main() {
             string value = helperStrip(tokens[1]);
             cout <<"first: " << helperStrip(tokens[0]) << endl;
             cout << "second: " <<helperStrip(tokens[1]) << endl;
-            cur_memtable->putKV(cur_memtable->root, key, value);
+            try
+            {
+                cur_memtable->root = cur_memtable->putKV(cur_memtable->root, key, value);
+                cur_memtable->printTree(cur_memtable->root);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            
             
 
         }
@@ -89,11 +98,21 @@ int main() {
                 cout << "invalid\n";
                 continue;
             }
-            string input = input.substr(4, input.size() - 5);
+            string cur_input = input.substr(4, input.size() - 5);
             cout << "GET" << endl;
-            string key = helperStrip(input);
+            string key = helperStrip(cur_input);
             cout << key << endl;
-            cur_memtable->getKV(cur_memtable->root, key);
+            try
+            {
+                string result = cur_memtable->getKV(cur_memtable->root, key);
+                cout << "The value is " + result + "\n";
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            
+
 
         }
         else if (input.find("scan(") == 0 && input[input.length() - 1] == ')') {
