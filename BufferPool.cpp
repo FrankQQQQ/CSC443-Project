@@ -3,20 +3,30 @@
 #include <list>
 #include <string>
 #include <unordered_map>
+#include <ctime>
+#include <chrono>
 #include "Memtable.cpp"
+#include "MurmurHash3.h"
 using namespace std;
+using namespace std::chrono;
+
+enum class EvictionPolicy {
+    LRU,
+    Clock
+};
+
 
 class Frame {
 public:
     string page_id;
     string data;
-    // Add other necessary metadata here
+    system_clock::time_point last_access_time;
+    bool clock_bit;
 
-    Frame(string page_id, string data) {
-        this->page_id = page_id;
-        this->data = data;
-    }
+    Frame(string page_id, string data)
+        : page_id(move(page_id)), data(move(data)), last_access_time(system_clock::now()), clock_bit(false) {}
 };
+
 
 class BufferPool {
 private:
@@ -28,15 +38,37 @@ private:
 
     // Hashing function
     size_t hash_function(string key) {
-        // Implement a suitable hashing function, e.g., MurmurHash or xxHash
+        // Using the std::hash function from the standard library for simplicity
+        hash<string> hasher;
+        return hasher(key);
     }
 
     // Method to split a bucket
-    void split_bucket(int bucket_index) {
+        void split_bucket(int bucket_index) {
         // 1. Create a new bucket
+        list<Frame> new_bucket;
+
         // 2. Update the global depth if necessary
+        if (bucket_index >= (1 << global_depth)) {
+            global_depth++;
+            directory.resize(1 << global_depth);
+        }
+
         // 3. Rehash and redistribute the pages between the original and new buckets
+        for (auto it = directory[bucket_index].begin(); it != directory[bucket_index].end();) {
+            size_t new_bucket_index = hash_function(it->page_id) % directory.size();
+            if (new_bucket_index != static_cast<size_t>(bucket_index)) {
+                new_bucket.push_back(*it);
+                it = directory[bucket_index].erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        // Insert the new bucket into the directory
+        directory.push_back(new_bucket);
     }
+
 
 public:
     BufferPool(int initial_size, int max_size) {
