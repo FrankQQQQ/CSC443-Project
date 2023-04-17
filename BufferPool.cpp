@@ -39,10 +39,23 @@ private:
     int clock_hand;
 
     // Hashing function
+    uint32_t simple_hash(const void* data, int len) {
+        const char* key = reinterpret_cast<const char*>(data);
+        uint32_t hash = 5381;
+        int c;
+
+        while (len--) {
+            c = *key++;
+            hash = ((hash << 5) + hash) ^ c; // hash * 33 ^ c
+        }
+
+        return hash;
+    }
+
+
     size_t hash_function(const string& key) {
-        uint32_t hash[4];
-        MurmurHash3_x86_32(key.data(), key.size(), 0, hash);
-        return static_cast<size_t>(hash[0]);
+        uint32_t hash = simple_hash(key.data(), static_cast<int>(key.size()));
+        return static_cast<size_t>(hash);
     }
 
     // The rest of the BufferPool implementation remains the same as in the original code, except for the following methods:
@@ -78,28 +91,29 @@ public:
     }
 
     // Evict pages using the LRU policy
-    void evict_pages_lru(int num_pages) {
-        for (int i = 0; i < num_pages; i++) {
-            system_clock::time_point least_recent_time = system_clock::now();
-            int least_recent_bucket_index = -1;
-            list<Frame>::iterator least_recent_frame_it;
+void evict_pages_lru(int num_pages) {
+    for (int i = 0; i < num_pages; i++) {
+        system_clock::time_point least_recent_time = system_clock::now();
+        int least_recent_bucket_index = -1;
+        list<Frame>::iterator least_recent_frame_it;
 
-            for (int j = 0; j < directory.size(); j++) {
-                for (auto it = directory[j].begin(); it != directory[j].end(); ++it) {
-                    if (it->last_access_time < least_recent_time) {
-                        least_recent_time = it->last_access_time;
-                        least_recent_bucket_index = j;
-                        least_recent_frame_it = it;
-                    }
+        for (int j = 0; j < directory.size(); j++) {
+            for (auto it = directory[j].begin(); it != directory[j].end(); ++it) {
+                if (it->last_access_time < least_recent_time) {
+                    least_recent_time = it->last_access_time;
+                    least_recent_bucket_index = j;
+                    least_recent_frame_it = it;
                 }
             }
+        }
 
-            if (least_recent_bucket_index != -1) {
-                directory[least_recent_bucket_index].erase(least_recent_frame_it);
-current_size--;
+        if (least_recent_bucket_index != -1) {
+            directory[least_recent_bucket_index].erase(least_recent_frame_it);
+            current_size--;
+        }
+    }
 }
-}
-}
+
 
     void split_bucket(int bucket_index) {
         // 1. Create a new bucket
@@ -152,17 +166,21 @@ void evict_pages_clock(int num_pages) {
 
 // Get a page from the buffer pool; if not found, load it from the storage and insert it
 string get_page(const string& page_id, Memtable& memtable) {
-    string data = search_page(page_id);
-    if (data.empty()) {
-        data = memtable.getKV(memtable.root, page_id);
+    size_t bucket_index = hash_function(page_id) % directory.size();
+    auto frame_it = search_page(page_id);
+    
+    if (frame_it == directory[bucket_index].end()) {
+        string data = memtable.getKV(memtable.root, page_id);
         if (current_size == max_size) {
             evict_pages(1);
         }
         insert_page(page_id, data);
+        return data;
+    } else {
+        frame_it->last_access_time = system_clock::now();
+        return frame_it->data;
     }
-    return data;
 }
-
 
 
     // Insert a page into the buffer pool
@@ -172,7 +190,9 @@ void insert_page(string page_id, string data) {
 
     // 2. Check if the page already exists; if so, update its data
     for (Frame &frame : directory[bucket_index]) {
-        if (frame.page_id == page_id) {
+        auto frame_it = search_page(page_id);
+        if (frame_it == directory[bucket_index].end())
+         {
             frame.data = data;
             return;
         }
@@ -191,34 +211,25 @@ void insert_page(string page_id, string data) {
 
 
 // Search for a page in the buffer pool
-string search_page(string page_id) {
-    // 1. Calculate the bucket index using the hash function
+list<Frame>::iterator search_page(const string& page_id) {
     size_t bucket_index = hash_function(page_id) % directory.size();
-
-    // 2. Search the bucket for the target page
-    for (const Frame &frame : directory[bucket_index]) {
-        if (frame.page_id == page_id) {
-            // 3. If found, return the data; otherwise, return an empty string or an error message
-            return frame.data;
-        }
-    }
-
-    return ""; // Page not found
-}
-
-// Delete a page from the buffer pool
-void delete_page(string page_id) {
-    // 1. Calculate the bucket index using the hash function
-    size_t bucket_index = hash_function(page_id) % directory.size();
-
-    // 2. Search the bucket for the target page
     for (auto it = directory[bucket_index].begin(); it != directory[bucket_index].end(); ++it) {
         if (it->page_id == page_id) {
-            // 3. If found, remove the page from the bucket
-            directory[bucket_index].erase(it);
-            current_size--;
-            break;
+            return it;
         }
+    }
+    return directory[bucket_index].end();
+}
+
+
+// Delete a page from the buffer pool
+void delete_page(const string& page_id) {
+    size_t bucket_index = hash_function(page_id) % directory.size();
+    auto frame_it = search_page(page_id);
+    
+    if (frame_it != directory[bucket_index].end()) {
+        directory[bucket_index].erase(frame_it);
+        current_size--;
     }
 }
 
@@ -285,49 +296,4 @@ void shrink_directory() {
     }
 }
 };
-
-
-int main() {
-// Create a BufferPool instance with the LRU eviction policy
-BufferPool bufferPool(4, 8, EvictionPolicy::LRU);
-
-// Create a Memtable instance
-Memtable memtable(nullptr, 100);
-
-// Add key-value pairs to the Memtable
-memtable.root = memtable.putKV(memtable.root, "1", "a");
-memtable.root = memtable.putKV(memtable.root, "2", "b");
-memtable.root = memtable.putKV(memtable.root, "3", "c");
-memtable.root = memtable.putKV(memtable.root, "4", "d");
-memtable.root = memtable.putKV(memtable.root, "5", "e");
-memtable.root = memtable.putKV(memtable.root, "6", "f");
-memtable.root = memtable.putKV(memtable.root, "7", "g");
-memtable.root = memtable.putKV(memtable.root, "8", "h");
-
-// Insert pages from the Memtable into the BufferPool
-for (int i = 1; i <= 8; i++) {
-    string key = to_string(i);
-    string value = memtable.getKV(memtable.root, key);
-    bufferPool.insert_page(key, value);
-}
-
-// Search for pages in the BufferPool using the get_page method
-for (int i = 1; i <= 8; i++) {
-    string key = to_string(i);
-    string value = bufferPool.get_page(key, memtable);
-    cout << "Key: " << key << ", Value: " << value << endl;
-}
-
-// Delete a page from the BufferPool
-bufferPool.delete_page("3");
-
-// Try to search for the deleted page using the get_page method
-string deleted_page_data = bufferPool.get_page("3", memtable);
-cout << "Deleted page data: " << deleted_page_data << endl; // Should be an empty string
-
-// Change the maximum size of the directory
-bufferPool.set_max_size(6);
-
-return 0;
-}
 
