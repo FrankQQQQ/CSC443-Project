@@ -41,6 +41,7 @@
         "array": "cpp",
         "unordered_map": "cpp",
         "filesystem": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "list": "cpp"
     }
 }
