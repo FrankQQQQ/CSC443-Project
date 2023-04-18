@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MEMTABLE_H
 #define MEMTABLE_H
 #include "run.h"
@@ -38,6 +39,7 @@ class Memtable{
     int size;
     string name;
     Memtable(Node * my_root, int num);
+    Memtable(Node * my_root, int num, string name);
     int treeHeight(Node* root);
     int getHeight(Node * p);
     int getBalance(Node * root);

@@ -2,10 +2,14 @@
 using namespace std;
 #include <string>
 #include <filesystem>
-#include "run.h"
 #include <vector>
 #include <sstream>
-#include "Memtable.cpp"
+#include <fstream>
+#include <memory>
+#include <algorithm>
+#include "run.h"
+#include "Memtable.h"
+#include "SST.h"
 
 string openFolder(string name) {
     string path = "./" + name;
@@ -30,6 +34,15 @@ string helperStrip(string str){
     str.erase(0, 1);  // remove leading double quote
     str.erase(str.size() - 1);  // remove trailing double quote
     return str;
+}
+
+extern string DIR_NAME = "cur";
+extern vector<string> sstFiles;
+
+void updateDirName(string dir_name){
+    DIR_NAME = dir_name;
+    return;
+
 }
 
 
@@ -105,7 +118,26 @@ int main() {
             try
             {
                 string result = cur_memtable->getKV(cur_memtable->root, key);
-                cout << "The value is " + result + "\n";
+                if (result != "not found") {
+                    cout << "The value is " + result + "\n";
+                }
+                SST sst = SST();
+
+                for (const auto& sstFile : sstFiles) {
+                    int lineCount;
+                    ifstream file(sstFile);
+                    string firstLine;
+                    if (getline(file, firstLine)) {
+                        lineCount = stoi(firstLine.substr(0, firstLine.find(';')));
+                    } else {
+                        continue;
+                    }
+                    result = sst.binarySearchFile(sstFile, key, lineCount);
+                    if (result != "Key not found!") {
+                        cout << "The value is " + result + "\n";
+                    }
+                }
+                cout << "not found \n";
             }
             catch(const std::exception& e)
             {

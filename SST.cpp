@@ -1,56 +1,51 @@
 #include<iostream>
-using namespace std;
 #include <vector>
 #include <string>
 #include <queue>
-#include "./Memtable.cpp"
+#include "./Memtable.h"
 #include <chrono>
 #include <ctime>    
 #include <fstream>
 #include <filesystem>
+#include <SST.h>
 
-class SST{
-    public:
-    string path;
-    void store(vector<KVPair> pairs, string dirname) {
-    // string filename = "a" + getTime() + ".txt";
-    string filename = "a.txt";
-    string path = "./" + dirname;
-    if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
-        // Create the directory if it does not exist
-        if (!filesystem::create_directory(path)) {
-            cerr << "Failed to create directory " << path << endl;
+using namespace std;
+
+void SST::store(vector<KVPair> pairs, string dirname, int counter){
+        string filename = "sst_" + to_string(counter) + ".txt";
+        string path = "./" + dirname;
+        if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
+            // Create the directory if it does not exist
+            if (!filesystem::create_directory(path)) {
+                cerr << "Failed to create directory " << path << endl;
+                return;
+            }
+        }
+        path += "/" + filename;
+        ofstream file(path);
+        if (file.is_open()) {
+            file << pairs.size() << ";" << pairs[0].getKey() << ";" << pairs[pairs.size() - 1].getKey() << "\n";
+            for (KVPair pair : pairs) {
+                file << pair.getKey() << ";" << pair.getValue() << endl;
+            }
+            file.close();
+            cout << "File created: " << path << endl;
+        } else {
+            cerr << "Failed to create file " << path << endl;
             return;
         }
-    }
-    path += "/" + filename;
-    ofstream file(path);
-    if (file.is_open()) {
-        file << pairs.size() << ";" << pairs[0].getKey() << ";" << pairs[pairs.size() - 1].getKey() << "\n";
-        for (KVPair pair : pairs) {
-            file << pair.getKey() << ";" << pair.getValue() << endl;
-        }
-        file.close();
-        cout << "File created: " << path << endl;
-    } else {
-        cerr << "Failed to create file " << path << endl;
-        return;
-    }
 }
 
-
-    string getTime(){
+string SST::getTime(){
         time_t now = time(nullptr);
         tm local_time = *localtime(&now);
         char time_str[100];
         strftime(time_str, sizeof(time_str), "%m-%d-%H:%M:%S", &local_time);
         
         return string(time_str);
-    }
-   
+}
 
-
-string binarySearchFile(const string& filename, const string& targetKey, int lineCount) {
+string SST::binarySearchFile(const string& filename, const string& targetKey, int lineCount) {
     ifstream file(filename);
     if (!file.is_open()) {
         return "File not found!";
@@ -80,35 +75,32 @@ string binarySearchFile(const string& filename, const string& targetKey, int lin
 }
 
 
-};
 
-
-
-int main(){
-    SST my_sst = SST();
+// int main(){
+//     SST my_sst = SST();
 
 
         
-    //create memtable, set maximum capacity
-    Memtable* my_tree = new Memtable(NULL, 100);
+//     //create memtable, set maximum capacity
+//     Memtable* my_tree = new Memtable(NULL, 100);
 
-    //putKV
-    my_tree->root = my_tree->putKV(my_tree->root, "111111111111111111", "aaaaaaaaaaaaaaaaaa");
-    my_tree->root = my_tree->putKV(my_tree->root, "2", "b");
-    my_tree->root = my_tree->putKV(my_tree->root, "3", "c");
-    my_tree->root = my_tree->putKV(my_tree->root, "4", "d");
-    my_tree->root = my_tree->putKV(my_tree->root, "5", "e");
-    my_tree->root = my_tree->putKV(my_tree->root, "6", "f");
-    my_tree->root = my_tree->putKV(my_tree->root, "7", "g");
-    my_tree->root = my_tree->putKV(my_tree->root, "8", "h");
+//     //putKV
+//     my_tree->root = my_tree->putKV(my_tree->root, "111111111111111111", "aaaaaaaaaaaaaaaaaa");
+//     my_tree->root = my_tree->putKV(my_tree->root, "2", "b");
+//     my_tree->root = my_tree->putKV(my_tree->root, "3", "c");
+//     my_tree->root = my_tree->putKV(my_tree->root, "4", "d");
+//     my_tree->root = my_tree->putKV(my_tree->root, "5", "e");
+//     my_tree->root = my_tree->putKV(my_tree->root, "6", "f");
+//     my_tree->root = my_tree->putKV(my_tree->root, "7", "g");
+//     my_tree->root = my_tree->putKV(my_tree->root, "8", "h");
 
-    vector<KVPair> pairs = my_tree->purge(my_tree->root);
+//     vector<KVPair> pairs = my_tree->purge(my_tree->root);
 
-    my_sst.store(pairs, "aaa");
-    cout << "\n\n";
-    // cout << my_sst.binarySearchFile("a.txt", "7", 8);
-    // cout << "\n\n";
+//     my_sst.store(pairs, "aaa");
+//     cout << "\n\n";
+//     // cout << my_sst.binarySearchFile("a.txt", "7", 8);
+//     // cout << "\n\n";
     
 
 
-}
+// }

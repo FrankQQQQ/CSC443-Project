@@ -3,14 +3,14 @@
 #include <vector>
 #include <string>
 
-extern string DIR_NAME = "cur";
+// extern string DIR_NAME = "cur";
 
 
-extern void updateDirName(string dir_name){
-    DIR_NAME = dir_name;
-    return;
+// inline void updateDirName(string dir_name){
+//     DIR_NAME = dir_name;
+//     return;
 
-}
+// }
 
 
 #endif
