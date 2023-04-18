@@ -37,12 +37,46 @@ string helperStrip(string str){
 }
 
 extern string DIR_NAME = "cur";
-extern vector<string> sstFiles;
+extern vector<string> sstFiles = vector<string>();
 
 void updateDirName(string dir_name){
     DIR_NAME = dir_name;
     return;
 
+}
+
+void getStartEndKeys(const string& filename, string& startKey, string& endKey) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Failed to open file " << filename << endl;
+        return;
+    }
+
+    string line;
+    getline(file, line);
+    size_t firstSeparator = line.find(';');
+    size_t secondSeparator = line.find(';', firstSeparator + 1);
+    startKey = line.substr(firstSeparator + 1, secondSeparator - firstSeparator - 1);
+    endKey = line.substr(secondSeparator + 1);
+
+    file.close();
+}
+
+int getLineCount(const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Failed to open file " << filename << endl;
+        return 0;
+    }
+
+    int count = 0;
+    string line;
+    while (getline(file, line)) {
+        count++;
+    }
+
+    file.close();
+    return count - 1; // exclude the header line
 }
 
 
@@ -117,24 +151,32 @@ int main() {
             cout << key << endl;
             try
             {
+                // Search the memtable
                 string result = cur_memtable->getKV(cur_memtable->root, key);
                 if (result != "not found") {
                     cout << "The value is " + result + "\n";
                 }
                 SST sst = SST();
 
-                for (const auto& sstFile : sstFiles) {
-                    int lineCount;
-                    ifstream file(sstFile);
-                    string firstLine;
-                    if (getline(file, firstLine)) {
-                        lineCount = stoi(firstLine.substr(0, firstLine.find(';')));
+                // Binary search all the SST files
+                int left = 0;
+                int right = sstFiles.size() - 1;
+                while (left <= right) {
+                    int middle = left + (right - left) / 2;
+                    string startKey, endKey;
+                    getStartEndKeys(sstFiles[middle], startKey, endKey);
+
+                    if (key.compare(startKey) >= 0 && key.compare(endKey) <= 0) {
+                        // Found the correct SST file
+                        int lineCount = getLineCount(sstFiles[middle]);
+                        string res = sst.binarySearchFile(sstFiles[middle], key, lineCount);
+                        if (res != "Key not found!") {
+                            cout << "The value is " + res + "\n";
+                        }
+                    } else if (key.compare(endKey) > 0) {
+                        left = middle + 1;
                     } else {
-                        continue;
-                    }
-                    result = sst.binarySearchFile(sstFile, key, lineCount);
-                    if (result != "Key not found!") {
-                        cout << "The value is " + result + "\n";
+                        right = middle - 1;
                     }
                 }
                 cout << "not found \n";
@@ -166,10 +208,81 @@ int main() {
             cout << "second: " <<second << endl;
 
             try
-            {                //scanKV
+            {   //scanKV
                 vector<KVPair> result = cur_memtable->scanKV(cur_memtable->root, first, second);
                 for (int i = 0; i < result.size(); i++){
                     cout << result[i].printKVPair();
+                }
+                // Initialize the SST object to use scanFile function
+                SST sst = SST();
+
+                // Step 1: Search the memtable
+                vector<KVPair> memtableResults = cur_memtable->scanKV(cur_memtable->root, first, second);
+
+                // Step 2: Perform a binary search to find the starting SST file
+                int left = 0;
+                int right = sstFiles.size() - 1;
+                int startSSTIndex = -1;
+
+                while (left <= right) {
+                    int middle = left + (right - left) / 2;
+                    string startKey, endKey;
+                    getStartEndKeys(sstFiles[middle], startKey, endKey);
+
+                    if (second.compare(startKey) < 0) {
+                        right = middle - 1;
+                    } else if (first.compare(endKey) > 0) {
+                        left = middle + 1;
+                    } else {
+                        startSSTIndex = middle;
+                        break;
+                    }
+                }
+
+                // Step 3: Scan each SST file in the range
+                vector<KVPair> sstResults;
+                if (startSSTIndex != -1) {
+                    for (int i = startSSTIndex; i < sstFiles.size(); i++) {
+                        string startKey, endKey;
+                        getStartEndKeys(sstFiles[i], startKey, endKey);
+                        if (first.compare(endKey) > 0) {
+                            continue;
+                        }
+                        if (first.compare(startKey) < 0) {
+                            break;
+                        }
+                        int lineCount = getLineCount(sstFiles[i]);
+                        vector<KVPair> fileResults = sst.scanFile(sstFiles[i], first, second, lineCount);
+                        sstResults.insert(sstResults.end(), fileResults.begin(), fileResults.end());
+                    }
+                }
+
+                // Step 4: Merge the results from the memtable and SST files
+                vector<KVPair> mergedResults;
+                size_t memIdx = 0, sstIdx = 0;
+
+                while (memIdx < memtableResults.size() && sstIdx < sstResults.size()) {
+                    if (memtableResults[memIdx].getKey().compare(sstResults[sstIdx].getKey()) <= 0) {
+                        mergedResults.push_back(memtableResults[memIdx]);
+                        memIdx++;
+                    } else {
+                        mergedResults.push_back(sstResults[sstIdx]);
+                        sstIdx++;
+                    }
+                }
+
+                while (memIdx < memtableResults.size()) {
+                    mergedResults.push_back(memtableResults[memIdx]);
+                    memIdx++;
+                }
+
+                while (sstIdx < sstResults.size()) {
+                    mergedResults.push_back(sstResults[sstIdx]);
+                    sstIdx++;
+                }
+
+                for (int i = 0; i < mergedResults.size(); i++){
+                    cout << mergedResults[i].printKVPair();
                 }
                 cout << "\n\n";
 
