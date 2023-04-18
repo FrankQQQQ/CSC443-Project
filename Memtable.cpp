@@ -1,75 +1,59 @@
 #include<iostream>
-using namespace std;
 #include <vector>
 #include <string>
 #include <queue>
 #include "run.h"
+#include "SST.h"
+#include "Memtable.h"
 
-class Node{
-    // Node Class
-    public:
-    string key;
-    string val;
-    int height;
-    Node * left;
-    Node * right;
-    
-    Node(string key, string value){
-        this->key = key;
-        this->val = value;
-        this->left = NULL;
-        this->right = NULL;
-        this->height = 1;
-        
-    }
- };
+using namespace std;
 
-class KVPair {
-public:
-    string key;
-    string val;
-    KVPair(string key, string value){
-        this->key = key;
-        this->val = value;
-    }
+Node::Node(string key, string value){
+    this->key = key;
+    this->val = value;
+    this->left = NULL;
+    this->right = NULL;
+    this->height = 1;
+}
 
-    string getKey(){
-        return this->key;
-    }
-    string getValue(){
-        return this->val;
-    }
-    string printKVPair(){
-        return "[" + this->key + "," + this->val + "]";
-    }
-};
+KVPair::KVPair(string key, string value){
+    this->key = key;
+    this->val = value;
+}
 
-class Memtable{
-    public:
-    Node * root;
-    int size;
-    string name;
-    Memtable(Node * my_root, int num, string name){
-        this->root = my_root;
-        this->size = num;
-        this->name = name;
-    }
+string KVPair::getKey(){
+    return this->key;
+}
 
-    Memtable(Node* my_root, int num){
-        this->root = my_root;
-        this->size = num;
-    }
+string KVPair::getValue(){
+    return this->val;
+}
 
-    int treeHeight(Node* root){
-        if (! root){
-            return 0;
-        }
-        else{
-            return 1 + max(this->treeHeight(root->left), this->treeHeight(root->right));
-        }
+string KVPair::printKVPair(){
+    return "[" + this->key + "," + this->val + "]";
+}
+
+Memtable::Memtable(Node* my_root, int num){
+    this->root = my_root;
+    this->size = num;
+}
+
+Memtable::Memtable(Node* my_root, int num, string name){
+    this->root = my_root;
+    this->size = num;
+    this->name = name;
+}
+
+int Memtable::treeHeight(Node* root){
+    if (! root){
+        return 0;
     }
-    
-    int getHeight(Node * p){
+    else{
+        return 1 + max(this->treeHeight(root->left), this->treeHeight(root->right));
+    }
+}
+
+int Memtable::getHeight(Node * p){
         
         if(p->left && p->right){
             if (p->left->height < p->right->height)
@@ -83,9 +67,9 @@ class Memtable{
                return p->right->height + 1;
             }
             return 0;
-    }
+}
 
-    int getBalance(Node * root){
+int Memtable::getBalance(Node * root){
         if (root->left && root->right){
             return root->left->height - root->right->height;
         }
@@ -96,24 +80,34 @@ class Memtable{
             return -root->right->height;
         }
         
+}
+
+int Memtable::getNodeNum(Node *root){
+    if (root == NULL){
+        return 0;
     }
-
-    int getNodeNum(Node *root){
-        if (root == NULL){
-            return 0;
-        }
-        return (1 + getNodeNum(root->left) + getNodeNum(root->right));
+    else{
+        return 1 + getNodeNum(root->left) + getNodeNum(root->right);
     }
+}
 
-
-
-    Node* putKV(Node *root, string key, string value){
+Node* Memtable::putKV(Node *root, string key, string value){
         // if(this->name == ""){
         //     cout << "Database not opened \n";
         //     return;
         // }
+        vector<string> sstFiles;
         if (getNodeNum(root) >= size){
             // transfer to sst table.
+            SST my_sst = SST();
+            vector<KVPair> sortedPairs = purge(root);
+            string dirname = "sst";
+            my_sst.store(sortedPairs, dirname, sstFiles.size());
+            cout << "\n\n";
+            string filename = "sst_" + to_string(sstFiles.size()) + ".txt";
+            string path = "./" + dirname + "/" + filename;
+            sstFiles.push_back(path);
+            root = NULL;
         }
         Node * node = new Node(key, value);
         if (root == NULL){
@@ -153,9 +147,11 @@ class Memtable{
         }        
 
         return root;
-    }
+}
 
-    Node * l_rotate(Node* root){
+
+
+Node* Memtable::l_rotate(Node* root){
         Node * x = root->right;
         Node * temp = x->left;
         x->left = root;
@@ -163,39 +159,38 @@ class Memtable{
         return x;
 
 
-    }
+}
 
-    Node * r_rotate(Node * root){;
+Node* Memtable::r_rotate(Node * root){;
         Node *x = root->left;
         Node * temp = x->right;
         x->right = root;
         root->left = temp;
         return x;
+}
+
+string Memtable::getKV(Node* root, string key){
+    // if(this->name == ""){
+    //     cout << "Database not opened \n";
+    //     return;
+    // }
+    if (!root){
+        return "not found";
     }
-
-    string getKV(Node* root, string key){
-        // if(this->name == ""){
-        //     cout << "Database not opened \n";
-        //     return;
-        // }
-        if (!root){
-            return "not found";
-        }
-        if (root->key.compare(key) == 0){
-            // found
-            return root->val;
-        }
-        else if (root->key.compare(key) < 0){
-            //to right subtree
-            return getKV(root->right, key);
-        }
-        else{
-            return getKV(root->left, key);
-        }
+    if (root->key.compare(key) == 0){
+        // found
+        return root->val;
     }
+    else if (root->key.compare(key) < 0){
+        //to right subtree
+        return getKV(root->right, key);
+    }
+    else{
+        return getKV(root->left, key);
+    }
+}
 
-
-    void helperScan(Node *root, string small, string large, vector<KVPair>& result){
+void Memtable::helperScan(Node *root, string small, string large, vector<KVPair>& result){
         if(!root){
             return;
         }
@@ -206,64 +201,59 @@ class Memtable{
         }
         
         helperScan(root->right, small, large, result); 
+}
+
+vector<KVPair> Memtable::scanKV(Node *root, string small, string large){
+    vector<KVPair> result;
+    this->helperScan(root, small, large, result);
+    return result;
+}
+
+void Memtable::helperPurge(Node*root, vector<KVPair>& result){
+    if (!root){
+        return;
     }
+    helperPurge(root->left, result);
+    result.push_back(KVPair(root->key, root->val));
+    helperPurge(root->right, result);
 
+}
 
-    vector<KVPair> scanKV(Node *root, string small, string large){
-        vector<KVPair> result;
-        this->helperScan(root, small, large, result);
-        return result;
-    }
+vector<KVPair> Memtable::purge(Node* root){
+    vector<KVPair> result;
+    this->helperPurge(root, result);
+    return result;
+}
 
-    void helperPurge(Node*root, vector<KVPair>& result){
-        if (!root){
-            return;
-        }
-        helperPurge(root->left, result);
-        result.push_back(KVPair(root->key, root->val));
-        helperPurge(root->right, result);
+void Memtable::printTree(Node *v){
+    queue < Node *> q;
+    Node *cur;
+    q.push(v);
+    q.push(NULL);      
 
-    }
-
-    vector<KVPair> purge(Node* root){
-        vector<KVPair> result;
-        this->helperPurge(root, result);
-        return result;
-    }
-
-   void printTree(Node *v){
-        queue < Node *> q;
-        Node *cur;
-        q.push(v);
-        q.push(NULL);      
-
-        while(!q.empty()){
-            cur = q.front();
-            q.pop();
-            if(cur == NULL && q.size()!=0){
-                cout<<"\n";
-                
-                q.push(NULL);
-                continue;
-            }
-            if(cur!=NULL){
-                cout<<" "<<cur->key;
-
-                if (cur->left!=NULL){
-                q.push(cur->left);
-                }
-                if (cur->right!=NULL){
-                    q.push(cur->right);
-                }
-            }
+    while(!q.empty()){
+        cur = q.front();
+        q.pop();
+        if(cur == NULL && q.size()!=0){
+            cout<<"\n";
             
-            
+            q.push(NULL);
+            continue;
         }
+        if(cur!=NULL){
+            cout<<" "<<cur->key;
+
+            if (cur->left!=NULL){
+            q.push(cur->left);
+            }
+            if (cur->right!=NULL){
+                q.push(cur->right);
+            }
+        }
+        
+        
     }
-    
-    
-    
-};
+}
 
 
 
