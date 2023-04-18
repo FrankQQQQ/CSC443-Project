@@ -16,6 +16,7 @@ class SST {
     string path;
     void store(vector<KVPair> pairs, string dirname, int counter);
     string getTime();
+    vector<KVPair> scanFile(const string& filename, const string& small, const string& large, int lineCount);
     string binarySearchFile(const string& filename, const string& targetKey, int lineCount);
 };
 

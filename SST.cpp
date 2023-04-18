@@ -7,7 +7,7 @@
 #include <ctime>    
 #include <fstream>
 #include <filesystem>
-#include <SST.h>
+#include "SST.h"
 
 using namespace std;
 
@@ -43,6 +43,33 @@ string SST::getTime(){
         strftime(time_str, sizeof(time_str), "%m-%d-%H:%M:%S", &local_time);
         
         return string(time_str);
+}
+
+vector<KVPair> SST::scanFile(const string& filename, const string& small, const string& large, int lineCount) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Failed to open file " << filename << endl;
+        return {};
+    }
+    vector<KVPair> results;
+    string line;
+    getline(file, line); // skip the header line
+
+    while (getline(file, line)) {
+        string key = line.substr(0, line.find(';'));
+        string value = line.substr(line.find(';') + 1);
+
+        if (key.compare(small) >= 0 && key.compare(large) <= 0) {
+            results.push_back(KVPair(key, value));
+        }
+
+        if (key.compare(large) > 0) {
+            break;
+        }
+    }
+
+    file.close();
+    return results;
 }
 
 string SST::binarySearchFile(const string& filename, const string& targetKey, int lineCount) {
