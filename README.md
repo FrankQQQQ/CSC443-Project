@@ -38,7 +38,7 @@ g++ -std=c++17 -o run run.cpp Memtable.cpp SST.cpp BufferPool.cpp
 This will execute the `run.cpp` file, which demonstrates the features of the LSM storage system.
 
 
-Database System Implementation Report
+## Database System Implementation Report
 
 This report summarizes the implementation and efficiency analysis of the KV-Store database system comprising four key components: Memtable, SortedStringTable (SST), BufferPool, and EvictionPolicy. The database system is designed to store and manage key-value pairs efficiently.
 
